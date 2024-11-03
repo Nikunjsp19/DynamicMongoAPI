@@ -1,0 +1,6 @@
+spring:
+  application:
+    name: DynamicMongoAPI
+  data:
+    mongodb:
+      uri: mongodb+srv://user:password@sample.url/DATABASE
