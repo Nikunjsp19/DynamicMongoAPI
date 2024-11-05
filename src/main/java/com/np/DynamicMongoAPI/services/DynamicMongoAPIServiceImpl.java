@@ -1,6 +1,5 @@
 package com.np.DynamicMongoAPI.services;
 
-import com.np.DynamicMongoAPI.utils.StringUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.Document;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,7 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -30,30 +29,24 @@ public class DynamicMongoAPIServiceImpl implements DynamicMongoAPIService{
         filters.forEach((key, value) -> {
             if (value != null) {
                 if(value instanceof List<?>) {
-                    query.addCriteria(Criteria.where(StringUtils.camelCaseToMongo(key)).in((List<?>)value));
+                    query.addCriteria(Criteria.where(key).in((List<?>)value));
                 } else{
-                    query.addCriteria(Criteria.where(StringUtils.camelCaseToMongo(key)).is(value));
+                    query.addCriteria(Criteria.where(key).is(value));
                 }
             }
         });
 
-        log.info("Search request for Collection:{} with Query:{}", StringUtils.camelCaseToMongo(collectionName), query);
+        log.info("Search request for Collection:{} with Query:{}", collectionName, query);
 
-        return ResponseEntity.ok(mongoTemplate.find(query, Document.class,StringUtils.camelCaseToMongo(collectionName)));
+        return ResponseEntity.ok(mongoTemplate.find(query, Document.class,collectionName));
     }
 
 
     @Override
     public ResponseEntity<Document> add(String collectionName, Map<String, Object> fields) {
-        Map<String, Object> transformedFields = new HashMap<>();
 
-        for (Map.Entry<String, Object> entry : fields.entrySet()) {
-            String transformedKey = StringUtils.camelCaseToMongo(entry.getKey());
-            transformedFields.put(transformedKey, entry.getValue());
-        }
-
-        Document document = new Document(transformedFields);
-        mongoTemplate.insert(document, StringUtils.camelCaseToMongo(collectionName));
+        Document document = new Document(fields);
+        mongoTemplate.insert(document, collectionName);
         return ResponseEntity.status(HttpStatus.CREATED).body(document);
     }
 
@@ -66,18 +59,11 @@ public class DynamicMongoAPIServiceImpl implements DynamicMongoAPIService{
             return ResponseEntity.badRequest().body(null);
         }
 
-        Map<String, Object> transformedFields = new HashMap<>();
-
-        for (Map.Entry<String, Object> entry : fields.entrySet()) {
-            String transformedKey = StringUtils.camelCaseToMongo(entry.getKey());
-            transformedFields.put(transformedKey, entry.getValue());
-        }
-
         Query query = new Query(Criteria.where("ID").is(id));
         Update update = new Update();
-        transformedFields.forEach(update::set);
+        fields.forEach(update::set);
 
-        Document updatedDocument = mongoTemplate.findAndModify(query, update, FindAndModifyOptions.options().returnNew(true), Document.class, StringUtils.camelCaseToMongo(collectionName));
+        Document updatedDocument = mongoTemplate.findAndModify(query, update, FindAndModifyOptions.options().returnNew(true), Document.class, collectionName);
         if (updatedDocument == null) {
             return ResponseEntity.notFound().build();
         }
@@ -90,11 +76,20 @@ public class DynamicMongoAPIServiceImpl implements DynamicMongoAPIService{
 
         Query query = new Query();
         filters.forEach((key, value) ->
-                query.addCriteria(Criteria.where(StringUtils.camelCaseToMongo(key)).is(value))
+                query.addCriteria(Criteria.where(key).is(value))
         );
 
         // Return the number of documents deleted
-        return ResponseEntity.ok(mongoTemplate.remove(query, StringUtils.camelCaseToMongo(collectionName)).getDeletedCount());
+        return ResponseEntity.ok(mongoTemplate.remove(query, collectionName).getDeletedCount());
+    }
+
+    @Override
+    public ResponseEntity<List<Document>> aggregate(String collectionName, List<Document> aggregationPipeline) {
+
+        return ResponseEntity.ok(mongoTemplate.getCollection(collectionName)
+                .aggregate(aggregationPipeline)
+                .into(new ArrayList<>()));
+
     }
 
 }

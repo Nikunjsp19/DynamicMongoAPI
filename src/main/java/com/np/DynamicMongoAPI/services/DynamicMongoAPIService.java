@@ -13,4 +13,5 @@ public interface DynamicMongoAPIService {
     ResponseEntity<Document> add(String collectionName, Map<String, Object> fields);
     ResponseEntity<Document> update(String collectionName, Map<String, Object> fields);
     ResponseEntity<Long> delete(String collectionName, Map<String, Object> fields);
+    ResponseEntity<List<Document>> aggregate(String collectionName, List<Document> aggregationPipeline);
 }

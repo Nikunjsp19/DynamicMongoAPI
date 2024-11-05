@@ -37,4 +37,12 @@ public class DynamicMongoAPIController {
     public ResponseEntity<Long> delete(@PathVariable String collectionName, @RequestBody  Map<String, Object> fields) {
         return service.delete(collectionName, fields);
     }
+
+    @PostMapping("/{collectionName}/aggregate")
+    public ResponseEntity<List<Document>> aggregate(
+            @PathVariable String collectionName,
+            @RequestBody List<Document> aggregationPipeline) {
+        return service.aggregate(collectionName, aggregationPipeline);
+    }
+
 }
