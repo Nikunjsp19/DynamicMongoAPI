@@ -1,6 +1,7 @@
 package com.np.DynamicMongoAPI.services;
 
 import com.np.DynamicMongoAPI.utils.StringUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.bson.Document;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.FindAndModifyOptions;
@@ -18,6 +19,7 @@ import java.util.Map;
 import java.util.regex.Pattern;
 
 @Service
+@Slf4j
 public class DynamicMongoAPIServiceImpl implements DynamicMongoAPIService{
     @Autowired
     MongoTemplate mongoTemplate;
@@ -31,10 +33,12 @@ public class DynamicMongoAPIServiceImpl implements DynamicMongoAPIService{
                 if(value instanceof List<?>) {
                     query.addCriteria(Criteria.where(StringUtils.camelCaseToMongo(key)).in((List<?>)value));
                 } else{
-                    query.addCriteria(Criteria.where(StringUtils.camelCaseToMongo(key)).regex(Pattern.compile(value.toString(), Pattern.CASE_INSENSITIVE)));
+                    query.addCriteria(Criteria.where(StringUtils.camelCaseToMongo(key)).is(value));
                 }
             }
         });
+
+        log.info("Search request for Collection:{} with Query:{}", StringUtils.camelCaseToMongo(collectionName), query);
 
         return ResponseEntity.ok(mongoTemplate.find(query, Document.class,StringUtils.camelCaseToMongo(collectionName)));
     }

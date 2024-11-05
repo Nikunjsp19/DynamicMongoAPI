@@ -1,6 +1,7 @@
 package com.np.DynamicMongoAPI.controllers;
 
 import com.np.DynamicMongoAPI.services.DynamicMongoAPIService;
+import lombok.extern.slf4j.Slf4j;
 import org.bson.Document;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -10,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
+@Slf4j
 public class DynamicMongoAPIController {
 
     @Autowired
